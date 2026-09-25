@@ -299,9 +299,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   type="button"
                   className="auth-btn auth-btn--outline"
                   onClick={() => {
-                    authService.setApiBase('http://localhost:3001')
-                    setServerUrl('http://localhost:3001')
-                    setServerCheckStatus('Сброшено на localhost:3001')
+                    authService.setApiBase('')
+                    const defaultUrl = authService.getApiBase()
+                    setServerUrl(defaultUrl)
+                    setServerCheckStatus(`Сброшено: ${defaultUrl}`)
                   }}
                 >
                   Сброс по умолчанию

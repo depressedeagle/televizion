@@ -161,7 +161,7 @@ class AuthService {
       }
     }
 
-    return 'http://192.168.1.6:3001'
+    return 'https://televizion.onrender.com'
   }
 
   /**

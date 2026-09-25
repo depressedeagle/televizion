@@ -1,0 +1,189 @@
+/* Стили модального окна настроек зеркала для ТВ */
+.rezka-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.rezka-modal {
+  width: 100%;
+  max-width: 36rem;
+  background: #151926;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+  animation: rezkaModalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes rezkaModalIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.rezka-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.rezka-modal__header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.rezka-modal__close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+
+.rezka-modal__close:hover,
+.rezka-modal__close:focus-visible {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.rezka-modal__body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.rezka-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.rezka-field label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.rezka-input {
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  color: #fff;
+  background: #0d111a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.rezka-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+.rezka-field-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.4;
+}
+
+.rezka-field-hint strong {
+  color: #60a5fa;
+}
+
+.rezka-status-box {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.rezka-status-box--ok {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #86efac;
+}
+
+.rezka-status-box--err {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+.rezka-save-msg {
+  padding: 0.5rem 1rem;
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.rezka-modal__footer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: #111420;
+}
+
+.rezka-footer-spacer {
+  flex: 1;
+}
+
+.rezka-btn {
+  padding: 0.65rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+}
+
+.rezka-btn--test {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.rezka-btn--test:hover,
+.rezka-btn--test:focus-visible {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.rezka-btn--cancel {
+  color: rgba(255, 255, 255, 0.8);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.rezka-btn--cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.rezka-btn--save {
+  color: #fff;
+  background: #2563eb;
+  border: 1px solid #3b82f6;
+}
+
+.rezka-btn--save:hover,
+.rezka-btn--save:focus-visible {
+  background: #1d4ed8;
+}

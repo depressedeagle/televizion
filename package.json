@@ -1,0 +1,51 @@
+{
+  "name": "televizion",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "start": "node server/index.mjs",
+    "dev:client": "vite",
+    "dev:tv": "vite --host",
+    "dev:server": "node server/index.mjs",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "cap:sync": "npm run build && npx cap sync android",
+    "cap:open": "npx cap open android",
+    "build:apk": "npm run cap:sync && powershell -ExecutionPolicy Bypass -Command \"$env:JAVA_HOME='C:\\Program Files\\Android\\Android Studio\\jbr'; cd android; .\\gradlew.bat assembleDebug; cd ..; Copy-Item android\\app\\build\\outputs\\apk\\debug\\app-debug.apk -Destination Televizion.apk; Write-Host 'APK готов в корне проекта: Televizion.apk' -ForegroundColor Green\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^26.6.2",
+    "@types/react": "^19.2.11",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.3",
+    "concurrently": "^9.2.1",
+    "jsdom": "^28.0.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4",
+    "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "axios": "^1.13.4",
+    "cheerio": "^1.2.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "hls.js": "^1.7.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.0"
+  }
+}

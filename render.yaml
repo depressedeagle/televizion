@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: televizion-api
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server/index.mjs
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production

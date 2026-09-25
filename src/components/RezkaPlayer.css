@@ -1,0 +1,1127 @@
+/* ====================================================
+   Кинопоиск TV Player: Кинематографичный интерфейс для Smart TV
+   ==================================================== */
+
+.kp-hub-container {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #07090e;
+  color: #f8fafc;
+  overflow: hidden;
+  z-index: 50;
+  user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* ====================================================
+   ФАЗА 1: КАРТОЧКА ФИЛЬМА (КИНОПОИСК СТИЛЬ)
+   ==================================================== */
+
+.kp-overview-page {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2.5rem 4rem 2rem 4rem;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Фоновый постер с блюром и виньеткой */
+.kp-backdrop-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center top;
+  filter: blur(28px) brightness(0.24);
+  transform: scale(1.12);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.kp-backdrop-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 65% 35%, rgba(7, 9, 14, 0.45) 0%, rgba(7, 9, 14, 0.94) 75%, #07090e 100%),
+              linear-gradient(180deg, rgba(7, 9, 14, 0.6) 0%, rgba(7, 9, 14, 0.98) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Верхняя панель карточки */
+.kp-overview-header {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-shrink: 0;
+}
+
+.kp-back-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  color: #f1f5f9;
+  padding: 0.75rem 1.6rem;
+  border-radius: 9999px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(8px);
+  outline: none;
+}
+
+.kp-back-btn:hover,
+.kp-back-btn:focus,
+.kp-back-btn:focus-visible {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: #38bdf8;
+  color: #fff;
+  transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.45);
+}
+
+.kp-clock {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+/* Главный блок контента фильма */
+.kp-movie-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 3.5rem;
+  align-items: flex-start;
+  max-width: 1650px;
+  width: 100%;
+}
+
+/* Постер фильма слева */
+.kp-poster-wrap {
+  flex-shrink: 0;
+  width: 290px;
+  height: 435px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  background: #141722;
+}
+
+.kp-poster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.kp-poster-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.kp-poster-placeholder-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+}
+
+.kp-poster-placeholder-icon {
+  font-size: 3.5rem;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+}
+
+.kp-poster-placeholder-title {
+  color: #f1f5f9;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.kp-poster-placeholder-year {
+  color: #38bdf8;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+/* Описание и кнопки справа */
+.kp-details-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  flex: 1;
+}
+
+.kp-title {
+  font-size: 2.6rem;
+  font-weight: 900;
+  line-height: 1.15;
+  color: #ffffff;
+  margin: 0;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.8);
+  letter-spacing: -0.02em;
+}
+
+.kp-orig-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin: -0.5rem 0 0 0;
+}
+
+/* Бейджи метаданных */
+.kp-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  align-items: center;
+}
+
+.kp-badge {
+  padding: 0.4rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.kp-badge--fhd {
+  background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.35);
+}
+
+.kp-badge--hd {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 4px 15px rgba(2, 132, 199, 0.35);
+}
+
+.kp-badge--pending {
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  font-weight: 700;
+}
+
+.kp-badge--year,
+.kp-badge--duration {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+.kp-badge--rating {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #000;
+  font-weight: 900;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.kp-badge--cat {
+  background: rgba(255, 255, 255, 0.07);
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.kp-genres {
+  font-size: 1.05rem;
+  color: #cbd5e1;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.kp-genres strong {
+  color: #e2e8f0;
+}
+
+.kp-description {
+  font-size: 1.12rem;
+  line-height: 1.65;
+  color: #94a3b8;
+  max-width: 900px;
+  margin: 0.25rem 0;
+}
+
+/* ГЛАВНЫЕ КНОПКИ ДЕЙСТВИЯ */
+.kp-actions-row {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+  margin-top: 0.6rem;
+}
+
+.kp-action-btn {
+  padding: 1rem 2.5rem;
+  border-radius: 14px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+  letter-spacing: 0.01em;
+}
+
+.kp-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.kp-action-btn--primary {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: 2px solid rgba(56, 189, 248, 0.5);
+  box-shadow: 0 10px 30px rgba(2, 132, 199, 0.45);
+}
+
+.kp-action-btn--primary:hover,
+.kp-action-btn--primary:focus,
+.kp-action-btn--primary:focus-visible {
+  border-color: #ffffff;
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+  box-shadow: 0 0 35px rgba(56, 189, 248, 0.8), 0 12px 35px rgba(0, 0, 0, 0.6);
+  transform: scale(1.05);
+}
+
+.kp-action-btn--secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(8px);
+}
+
+.kp-action-btn--secondary:hover,
+.kp-action-btn--secondary:focus,
+.kp-action-btn--secondary:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: #38bdf8;
+  color: #ffffff;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+  transform: scale(1.05);
+}
+
+.kp-btn-icon {
+  font-size: 1.2rem;
+}
+
+/* ВЫБОР ОЗВУЧКИ / АУДИОДОРОЖКИ */
+.kp-audio-block {
+  margin-top: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.kp-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.kp-audio-selected-tag {
+  background: rgba(56, 189, 248, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #38bdf8;
+  padding: 0.25rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.kp-audio-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.kp-audio-chip {
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.kp-audio-chip:hover,
+.kp-audio-chip:focus,
+.kp-audio-chip:focus-visible {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.2);
+  color: #ffffff;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3);
+}
+
+.kp-audio-chip--active {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.35) 0%, rgba(2, 132, 199, 0.45) 100%);
+  border-color: #38bdf8;
+  color: #38bdf8;
+  font-weight: 800;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+}
+
+.kp-audio-chip-icon {
+  font-size: 0.95rem;
+}
+
+.kp-audio-chip-text {
+  letter-spacing: 0.01em;
+}
+
+.kp-audio-chip-check {
+  font-size: 0.85rem;
+  color: #38bdf8;
+  font-weight: 900;
+}
+
+/* ВЫБОР ИСТОЧНИКА */
+.kp-sources-block {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.kp-section-label {
+  font-size: 0.92rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.kp-sources-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.kp-source-chip {
+  padding: 0.65rem 1.3rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  color: #cbd5e1;
+  font-size: 1.02rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.kp-source-chip:hover,
+.kp-source-chip:focus,
+.kp-source-chip:focus-visible {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.18);
+  color: #ffffff;
+  transform: scale(1.04);
+}
+
+.kp-source-chip--active {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.28);
+  color: #38bdf8;
+  font-weight: 800;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+}
+
+/* ДЛЯ СЕРИАЛОВ */
+.kp-series-section {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.kp-seasons-tabs {
+  display: flex;
+  gap: 0.65rem;
+  overflow-x: auto;
+  padding-bottom: 0.35rem;
+}
+
+.kp-season-tab {
+  padding: 0.55rem 1.25rem;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid transparent;
+  color: #94a3b8;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.kp-season-tab:hover,
+.kp-season-tab:focus,
+.kp-season-tab:focus-visible {
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.kp-season-tab--active {
+  background: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+}
+
+.kp-episodes-carousel {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.65rem;
+}
+
+.kp-episode-pill {
+  padding: 0.65rem 1.15rem;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 95px;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.kp-episode-pill:hover,
+.kp-episode-pill:focus,
+.kp-episode-pill:focus-visible {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.2);
+  color: #ffffff;
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+}
+
+.kp-episode-pill--active {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.28);
+  color: #38bdf8;
+  font-weight: 800;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+}
+
+.kp-ep-label {
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.kp-ep-current {
+  font-size: 0.78rem;
+  color: #38bdf8;
+  margin-top: 3px;
+  font-weight: 800;
+}
+
+/* ====================================================
+   ФАЗА 2: 100% ПОЛНОЭКРАННЫЙ ПРОСМОТР
+   ==================================================== */
+
+.kp-watching-page {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000000;
+  overflow: hidden;
+  z-index: 60;
+  cursor: none;
+}
+
+.kp-watching-page:hover {
+  cursor: default;
+}
+
+/* Нативный HTML5 видеоплеер на весь экран */
+.kp-native-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #000000;
+  z-index: 1;
+  object-fit: contain;
+}
+
+/* Убираем стандартные контролы браузера */
+.kp-native-video::-webkit-media-controls {
+  display: none !important;
+}
+
+/* Индикатор буферизации */
+.kp-buffering-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  z-index: 70;
+  pointer-events: none;
+}
+
+.kp-buffering-spinner {
+  width: 56px;
+  height: 56px;
+  border: 4px solid rgba(56, 189, 248, 0.2);
+  border-top-color: #38bdf8;
+  border-radius: 50%;
+  animation: kpBufferSpin 0.85s linear infinite;
+}
+
+@keyframes kpBufferSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.kp-buffering-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+/* Ошибка потока */
+.kp-stream-error {
+  display: flex;
+  align-items: center;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1.5px solid rgba(239, 68, 68, 0.5);
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  color: #fca5a5;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-top: 1rem;
+}
+
+/* OSD уведомление */
+.kp-osd-pill {
+  position: fixed;
+  top: 2rem;
+  right: 3rem;
+  background: rgba(15, 23, 42, 0.94);
+  border: 1.5px solid rgba(56, 189, 248, 0.7);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85), 0 0 25px rgba(56, 189, 248, 0.35);
+  color: #ffffff;
+  padding: 0.75rem 1.8rem;
+  border-radius: 9999px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  z-index: 100;
+  pointer-events: none;
+  animation: kpOsdPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes kpOsdPop {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Плавающий оверлей Kinopoisk HUD */
+.kp-watching-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none !important;
+  z-index: 80;
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kp-watching-hud--visible {
+  opacity: 1;
+  pointer-events: none !important;
+}
+
+.kp-watching-top-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  box-sizing: border-box;
+  padding: 0 2.5rem;
+  background: rgba(7, 9, 14, 0.98);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  pointer-events: auto;
+  z-index: 85;
+}
+
+.kp-hud-btn {
+  background: rgba(15, 23, 42, 0.88);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  color: #f8fafc;
+  padding: 0.55rem 1.25rem;
+  border-radius: 12px;
+  font-size: 1.02rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+  backdrop-filter: blur(10px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  flex-direction: row;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.kp-hud-btn:hover,
+.kp-hud-btn:focus,
+.kp-hud-btn:focus-visible {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.25);
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+  transform: scale(1.05);
+}
+
+.kp-hud-btn--back {
+  border-color: rgba(56, 189, 248, 0.4);
+  font-weight: 800;
+}
+
+.kp-hud-btn--audio {
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #38bdf8;
+}
+
+.kp-hud-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.kp-hud-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+  max-width: 380px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kp-hud-btn--series-badge,
+.kp-hud-ep-badge {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1.5px solid rgba(56, 189, 248, 0.45);
+  padding: 0.35rem 0.85rem;
+  border-radius: 9px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #38bdf8;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.kp-hud-btn--series-badge:hover,
+.kp-hud-btn--series-badge:focus {
+  background: rgba(56, 189, 248, 0.3);
+  border-color: #38bdf8;
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
+  transform: scale(1.04);
+}
+
+.kp-hud-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.kp-watching-clock {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #94a3b8;
+  margin-left: 0.65rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+/* Выпадающая панель озвучек */
+.kp-audio-drawer {
+  position: absolute;
+  top: 5.5rem;
+  right: 14rem;
+  background: rgba(15, 23, 42, 0.98);
+  border: 1.5px solid rgba(56, 189, 248, 0.45);
+  border-radius: 18px;
+  padding: 1.35rem;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 30px rgba(56, 189, 248, 0.2);
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  backdrop-filter: blur(16px);
+  min-width: 280px;
+  max-height: 70vh;
+  overflow-y: auto;
+  pointer-events: auto;
+}
+
+/* Выпадающая панель серий и сезонов для пульта */
+.kp-episodes-drawer {
+  position: absolute;
+  top: 5.5rem;
+  left: 12rem;
+  background: rgba(15, 23, 42, 0.98);
+  border: 1.5px solid rgba(56, 189, 248, 0.45);
+  border-radius: 18px;
+  padding: 1.35rem;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 30px rgba(56, 189, 248, 0.2);
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  backdrop-filter: blur(16px);
+  min-width: 320px;
+  max-width: 520px;
+  max-height: 70vh;
+  overflow-y: auto;
+  pointer-events: auto;
+}
+
+.kp-drawer-episodes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: 0.5rem;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Выпадающая панель источников */
+.kp-source-drawer {
+  position: absolute;
+  top: 5.5rem;
+  right: 3.5rem;
+  background: rgba(15, 23, 42, 0.98);
+  border: 1.5px solid rgba(56, 189, 248, 0.45);
+  border-radius: 18px;
+  padding: 1.35rem;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 30px rgba(56, 189, 248, 0.2);
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  backdrop-filter: blur(16px);
+  min-width: 280px;
+  pointer-events: auto;
+}
+
+.kp-drawer-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kp-drawer-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.kp-drawer-chip {
+  padding: 0.85rem 1.35rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.kp-drawer-chip:hover,
+.kp-drawer-chip:focus,
+.kp-drawer-chip:focus-visible {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.22);
+  color: #ffffff;
+  transform: scale(1.03);
+}
+
+.kp-drawer-chip--active {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.32);
+  color: #38bdf8;
+  font-weight: 800;
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
+}
+
+/* Нижняя фирменная панель Кинопоиска с шкалой перемотки */
+.kp-watching-bottom-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: auto;
+  min-height: 96px;
+  box-sizing: border-box;
+  padding: 0.75rem 2rem max(1.2rem, env(safe-area-inset-bottom, 18px));
+  background: linear-gradient(0deg, rgba(7, 9, 14, 0.99) 0%, rgba(7, 9, 14, 0.96) 80%, rgba(7, 9, 14, 0.88) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0.65rem;
+  pointer-events: auto;
+  z-index: 85;
+  box-shadow: 0 -15px 35px rgba(0, 0, 0, 0.9);
+}
+
+/* Строка полосы перемотки (Seekbar / Timeline) */
+.kp-timeline-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.kp-time-label {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  min-width: 65px;
+}
+
+.kp-time-current {
+  color: #38bdf8;
+  text-align: right;
+}
+
+.kp-time-total {
+  text-align: left;
+}
+
+.kp-seekbar-container {
+  flex: 1;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  touch-action: none;
+  outline: none;
+}
+
+.kp-seekbar-rail {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  position: relative;
+  overflow: visible;
+  transition: height 0.15s ease;
+}
+
+.kp-seekbar-container:hover .kp-seekbar-rail,
+.kp-seekbar-container:focus .kp-seekbar-rail,
+.kp-seekbar-container:focus-visible .kp-seekbar-rail {
+  height: 8px;
+}
+
+.kp-seekbar-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, #0284c7 0%, #38bdf8 100%);
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+  pointer-events: none;
+}
+
+.kp-seekbar-thumb {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2.5px solid #38bdf8;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.9);
+  pointer-events: none;
+  transition: transform 0.1s ease;
+}
+
+.kp-seekbar-container:hover .kp-seekbar-thumb,
+.kp-seekbar-container:focus .kp-seekbar-thumb,
+.kp-seekbar-container:focus-visible .kp-seekbar-thumb {
+  transform: translate(-50%, -50%) scale(1.25);
+}
+
+/* Строка кнопок управления */
+.kp-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+}
+
+.kp-controls-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.kp-hud-seek-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #f1f5f9;
+  font-weight: 800;
+  padding: 0.48rem 1.05rem;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-direction: row;
+}
+
+.kp-hud-seek-btn:hover,
+.kp-hud-seek-btn:focus,
+.kp-hud-seek-btn:focus-visible {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.25);
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+.kp-hud-btn--subtle {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  font-size: 0.88rem;
+  padding: 0.45rem 0.8rem;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  flex-direction: row;
+}
+
+.kp-hud-btn--subtle:hover,
+.kp-hud-btn--subtle:focus,
+.kp-hud-btn--subtle:focus-visible {
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.kp-hud-play-toggle {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border-color: #38bdf8;
+  color: #ffffff;
+  font-weight: 800;
+  padding: 0.48rem 1.4rem;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-direction: row;
+}
+
+.kp-current-track-label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.01em;
+  margin-left: 0.4rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}
+
+.kp-controls-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.kp-remote-hint {
+  font-size: 0.88rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.kp-remote-hint strong {
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  font-weight: 800;
+}

@@ -278,10 +278,23 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
 
     if (Hls.isSupported()) {
       const hls = new Hls({
-        maxBufferLength: 30,
-        maxMaxBufferLength: 60,
+        // Оптимизация памяти и буфера для слабых Smart TV / Android TV
+        maxBufferLength: 20,              // 20 сек буфера вперед (хватает с запасом, не забивая ОЗУ)
+        maxMaxBufferLength: 35,          // Максимальный буфер не больше 35 сек
+        maxBufferSize: 25 * 1000 * 1000,  // 25 МБ максимум в куче JS (устраняет микрофризы сборщика мусора V8)
+        backBufferLength: 10,            // Удалять уже просмотренные сегменты через 10 сек (освобождает ОЗУ)
+        maxBufferHole: 0.4,              // Сглаживание микроразрывов на стыках сегментов
+        highBufferWatchdogPeriod: 1,     // Быстрое обнаружение подвисания буфера (раз в сек)
+        nudgeOffset: 0.1,                // Автоматический толчок при рассинхроне меток времени
+        nudgeMaxRetry: 8,                // Количество попыток автовосстановления без остановки видео
+        maxFragLookUpTolerance: 0.25,
+        // Стабильный ABR без частых скачков разрешения, перегружающих декодер ТВ
+        abrBandWidthFactor: 0.8,
+        abrBandWidthUpFactor: 0.7,
+        abrMaxWithRealBitrate: true,
         startPosition: currentWatchTime > 5 ? currentWatchTime : -1,
         enableWorker: true,
+        lowLatencyMode: false,
       })
 
       hls.loadSource(proxiedUrl)
@@ -295,7 +308,25 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
           width: l.width,
         }))
         setHlsLevels(levels)
-        setCurrentLevel(-1) // auto
+
+        // Восстанавливаем сохраненное качество пользователя (например, 720p для слабых ТВ)
+        let preferredLevel = -1
+        try {
+          const saved = localStorage.getItem('televizion_preferred_quality')
+          if (saved !== null) {
+            const parsed = parseInt(saved, 10)
+            if (!isNaN(parsed) && parsed >= -1 && parsed < levels.length) {
+              preferredLevel = parsed
+            }
+          }
+        } catch {}
+
+        if (preferredLevel !== -1) {
+          hls.currentLevel = preferredLevel
+          setCurrentLevel(preferredLevel)
+        } else {
+          setCurrentLevel(-1) // auto
+        }
 
         // Применяем выбранную аудиодорожку сразу при старте
         if (hls.audioTracks && hls.audioTracks.length > selectedAudioIdx) {
@@ -328,6 +359,12 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
               setStreamError('Ошибка воспроизведения видео')
               hls.destroy()
               break
+          }
+        } else if (data.details === Hls.ErrorDetails.BUFFER_STALLED_ERROR) {
+          // Мягкое автовосстановление при зависании декодера на слабом ТВ
+          console.warn('[HLS] Buffer stalled, nudging video decoder...')
+          if (video && !video.paused) {
+            video.currentTime = video.currentTime + 0.1
           }
         }
       })
@@ -451,17 +488,22 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
       return
     }
 
-    progressTimerRef.current = setInterval(() => {
+    // Если HUD скрыт, снижаем частоту ререндеров React (раз в 2 сек), экономя слабый CPU телевизора
+    const intervalMs = isWatchingHudVisible ? 500 : 2000
+    const updateTime = () => {
       const video = videoRef.current
       if (video && !video.paused && isFinite(video.currentTime)) {
         setCurrentWatchTime(video.currentTime)
       }
-    }, 500)
+    }
+
+    updateTime()
+    progressTimerRef.current = setInterval(updateTime, intervalMs)
 
     return () => {
       if (progressTimerRef.current) clearInterval(progressTimerRef.current)
     }
-  }, [viewMode])
+  }, [viewMode, isWatchingHudVisible])
 
   // Периодическое сохранение прогресса
   useEffect(() => {
@@ -691,6 +733,9 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
       if (!hlsRef.current) return
       hlsRef.current.currentLevel = levelIdx
       setCurrentLevel(levelIdx)
+      try {
+        localStorage.setItem('televizion_preferred_quality', String(levelIdx))
+      } catch {}
       const label =
         levelIdx === -1
           ? 'Авто'

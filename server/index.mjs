@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import { Readable } from 'node:stream'
 import express from 'express'
 import cors from 'cors'
 import axios from 'axios'
@@ -606,29 +607,26 @@ app.get('/api/hls-proxy', async (req, res) => {
       return res.send(text)
     }
 
-    // Для бинарных сегментов (.ts, .mp4, .key) — стримим напрямую
+    // Для бинарных сегментов (.ts, .mp4, .key) — кэшируем и стримим напрямую
     res.setHeader('Content-Type', contentType)
     res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Cache-Control', 'public, max-age=3600')
+    res.setHeader('Cache-Control', 'public, max-age=86400, immutable')
 
     const contentLength = response.headers.get('content-length')
     if (contentLength) res.setHeader('Content-Length', contentLength)
 
-    // Стримим тело ответа напрямую в клиент
-    const reader = response.body.getReader()
-    const pump = async () => {
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        res.write(Buffer.from(value))
-      }
+    // Стримим тело ответа напрямую с аппаратной поддержкой backpressure
+    if (response.body) {
+      const nodeStream = Readable.fromWeb(response.body)
+      nodeStream.pipe(res)
+      nodeStream.on('error', (err) => {
+        console.warn('[HLS-Proxy] Stream error:', err.message)
+        if (!res.headersSent) res.status(502).send('Stream error')
+        else res.end()
+      })
+    } else {
       res.end()
     }
-    pump().catch((err) => {
-      console.warn('[HLS-Proxy] Stream error:', err.message)
-      if (!res.headersSent) res.status(502).send('Stream error')
-      else res.end()
-    })
   } catch (err) {
     console.warn(`[HLS-Proxy] Fetch error for ${targetUrl.substring(0, 80)}:`, err.message)
     if (!res.headersSent) res.status(502).json({ error: 'HLS proxy error' })

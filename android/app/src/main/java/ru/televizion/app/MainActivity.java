@@ -15,12 +15,16 @@ public class MainActivity extends BridgeActivity {
         // Добавляем нативный интерфейс и разрешаем автовоспроизведение медиа
         WebView webView = getBridge() != null ? getBridge().getWebView() : null;
         if (webView != null) {
+            // Аппаратное ускорение на уровне View для слабых Smart TV
+            webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null);
+
             android.webkit.WebSettings settings = webView.getSettings();
             // Разрешаем видео стартовать сразу без обязательного клика/тапа
             settings.setMediaPlaybackRequiresUserGesture(false);
             settings.setDomStorageEnabled(true);
             settings.setDatabaseEnabled(true);
             settings.setJavaScriptCanOpenWindowsAutomatically(true);
+            settings.setCacheMode(android.webkit.WebSettings.LOAD_DEFAULT);
 
             webView.addJavascriptInterface(new Object() {
                 @JavascriptInterface

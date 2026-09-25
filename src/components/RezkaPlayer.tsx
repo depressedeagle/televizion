@@ -26,6 +26,13 @@ export function formatQualityLabel(height?: number, width = 0): string {
   return `${h}p`
 }
 
+export interface FastSeekState {
+  direction: -1 | 1
+  targetTime: number
+  totalDelta: number
+  speedMultiplier: number
+}
+
 interface MoviePlayerProps {
   movie: MovieDetail
   onBack: () => void
@@ -84,6 +91,24 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
   const [isWatchingHudVisible, setIsWatchingHudVisible] = useState(true)
   const [osdMessage, setOsdMessage] = useState<string | null>(null)
   const osdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Быстрая / ускоренная перемотка при удержании стрелок пульта
+  const [fastSeekInfo, setFastSeekInfo] = useState<FastSeekState | null>(null)
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const seekIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const safetyReleaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const activeDirectionRef = useRef<-1 | 1 | 0>(0)
+  const holdStartTimeRef = useRef<number>(0)
+  const isFastSeekingRef = useRef<boolean>(false)
+  const targetTimeRef = useRef<number>(0)
+  const initialTimeRef = useRef<number>(0)
+  const wasPlayingRef = useRef<boolean>(false)
+
+  const currentWatchTimeRef = useRef(currentWatchTime)
+  currentWatchTimeRef.current = currentWatchTime
+  const totalDurationRef = useRef(totalDuration)
+  totalDurationRef.current = totalDuration
 
   // HLS quality levels
   const [hlsLevels, setHlsLevels] = useState<{ height: number; bitrate: number; width?: number }[]>([])
@@ -450,14 +475,14 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
     return () => clearInterval(saveInterval)
   }, [viewMode, persistProgress])
 
-  // Перемотка
+  // Перемотка на заданное количество секунд (одиночный клик)
   const handleSeek = useCallback(
     (deltaSeconds: number) => {
       resetWatchingHudTimer()
       const video = videoRef.current
       if (!video) return
 
-      const maxTime = video.duration && isFinite(video.duration) ? video.duration : 7200
+      const maxTime = (video.duration && isFinite(video.duration) ? video.duration : totalDuration) || 7200
       const targetTime = Math.max(0, Math.min(maxTime, video.currentTime + deltaSeconds))
       video.currentTime = targetTime
       setCurrentWatchTime(targetTime)
@@ -466,7 +491,135 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
       const icon = deltaSeconds > 0 ? '⏩' : '⏪'
       showOsd(`${icon} ${formatWatchTime(targetTime)} (${sign}${deltaSeconds} сек)`)
     },
-    [resetWatchingHudTimer, showOsd]
+    [totalDuration, resetWatchingHudTimer, showOsd]
+  )
+
+  // Завершение перемотки (отпускание клавиши / кнопки пульта)
+  const commitSeeking = useCallback(() => {
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current)
+      holdTimerRef.current = null
+    }
+    if (seekIntervalRef.current) {
+      clearInterval(seekIntervalRef.current)
+      seekIntervalRef.current = null
+    }
+    if (safetyReleaseTimerRef.current) {
+      clearTimeout(safetyReleaseTimerRef.current)
+      safetyReleaseTimerRef.current = null
+    }
+
+    const direction = activeDirectionRef.current
+    const wasFast = isFastSeekingRef.current
+    const finalTime = targetTimeRef.current
+    const wasPlaying = wasPlayingRef.current
+
+    activeDirectionRef.current = 0
+    isFastSeekingRef.current = false
+    setFastSeekInfo(null)
+
+    if (direction === 0) return
+
+    const video = videoRef.current
+    if (video && wasFast) {
+      video.currentTime = finalTime
+      setCurrentWatchTime(finalTime)
+      if (wasPlaying) {
+        video.play().catch(() => {})
+      }
+      showOsd(`▶ ${formatWatchTime(finalTime)}`)
+      resetWatchingHudTimer()
+    }
+  }, [resetWatchingHudTimer, showOsd])
+
+  // Старт перемотки: одиночный клик = 10 сек, удержание = плавная ускоренная перемотка
+  const startSeeking = useCallback(
+    (direction: -1 | 1) => {
+      // Если уже зажато в том же направлении (повторные keydown от пульта/ОС)
+      if (activeDirectionRef.current === direction) {
+        if (safetyReleaseTimerRef.current) {
+          clearTimeout(safetyReleaseTimerRef.current)
+        }
+        safetyReleaseTimerRef.current = setTimeout(() => {
+          commitSeeking()
+        }, 420)
+        return
+      }
+
+      // Если было другое направление, завершаем его
+      if (activeDirectionRef.current !== 0) {
+        commitSeeking()
+      }
+
+      const video = videoRef.current
+      const current = video && isFinite(video.currentTime) ? video.currentTime : currentWatchTimeRef.current
+      const maxTime = (video?.duration && isFinite(video.duration) ? video.duration : totalDurationRef.current) || 7200
+
+      activeDirectionRef.current = direction
+      holdStartTimeRef.current = Date.now()
+      isFastSeekingRef.current = false
+      wasPlayingRef.current = video ? !video.paused : false
+
+      // Моментальный прыжок на 10 сек при первом нажатии
+      const initialTarget = Math.max(0, Math.min(maxTime, current + direction * 10))
+      targetTimeRef.current = initialTarget
+      initialTimeRef.current = current
+
+      if (video) {
+        video.currentTime = initialTarget
+      }
+      setCurrentWatchTime(initialTarget)
+      resetWatchingHudTimer()
+
+      const sign = direction > 0 ? '+' : ''
+      const icon = direction > 0 ? '⏩' : '⏪'
+      showOsd(`${icon} ${formatWatchTime(initialTarget)} (${sign}${direction * 10} сек)`)
+
+      // Таймер удержания (260мс): переключаем в режим ускоренной перемотки
+      holdTimerRef.current = setTimeout(() => {
+        isFastSeekingRef.current = true
+        if (video && !video.paused) {
+          video.pause()
+        }
+
+        const doTick = () => {
+          const elapsed = Date.now() - holdStartTimeRef.current
+          let step = 10
+          let multiplier = 2
+
+          if (elapsed > 4500) {
+            step = 120 // ~1600 сек/сек (20x)
+            multiplier = 20
+          } else if (elapsed > 2500) {
+            step = 60 // ~800 сек/сек (10x)
+            multiplier = 10
+          } else if (elapsed > 1200) {
+            step = 25 // ~330 сек/сек (5x)
+            multiplier = 5
+          } else {
+            step = 10 // ~130 сек/сек (2x)
+            multiplier = 2
+          }
+
+          const nextTarget = Math.max(0, Math.min(maxTime, targetTimeRef.current + direction * step))
+          targetTimeRef.current = nextTarget
+          setCurrentWatchTime(nextTarget)
+          resetWatchingHudTimer()
+
+          const totalDelta = Math.round(nextTarget - initialTimeRef.current)
+          setFastSeekInfo({
+            direction,
+            targetTime: nextTarget,
+            totalDelta,
+            speedMultiplier: multiplier,
+          })
+        }
+
+        doTick()
+        seekIntervalRef.current = setInterval(doTick, 75)
+      }, 260)
+    },
+    [commitSeeking, resetWatchingHudTimer, showOsd]
   )
 
   // Перемотка к абсолютному времени
@@ -620,18 +773,39 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
   useEffect(() => {
     if (viewMode !== 'watching') return
 
+    const isRewindKey = (e: KeyboardEvent) =>
+      e.key === 'ArrowLeft' ||
+      e.keyCode === 37 ||
+      e.key === 'MediaRewind' ||
+      e.key === 'Rewind' ||
+      e.keyCode === 412 ||
+      e.keyCode === 227
+
+    const isFastForwardKey = (e: KeyboardEvent) =>
+      e.key === 'ArrowRight' ||
+      e.keyCode === 39 ||
+      e.key === 'MediaFastForward' ||
+      e.key === 'FastForward' ||
+      e.keyCode === 417 ||
+      e.keyCode === 228
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Стрелка влево -> Перемотка назад (-10 сек)
-      if (e.key === 'ArrowLeft' || e.keyCode === 37 || e.key === 'MediaRewind') {
-        e.preventDefault()
-        handleSeek(-10)
+      // Если открыты выпадающие меню сезонов/серий или дорожек, не перехватываем стрелки
+      if (isAudioDrawerOpen || isEpisodesDrawerOpen) {
         return
       }
 
-      // Стрелка вправо -> Перемотка вперед (+10 сек)
-      if (e.key === 'ArrowRight' || e.keyCode === 39 || e.key === 'MediaFastForward') {
+      // Стрелка влево -> Перемотка назад (-10 сек / зажатие: быстрая перемотка)
+      if (isRewindKey(e)) {
         e.preventDefault()
-        handleSeek(10)
+        startSeeking(-1)
+        return
+      }
+
+      // Стрелка вправо -> Перемотка вперед (+10 сек / зажатие: быстрая перемотка)
+      if (isFastForwardKey(e)) {
+        e.preventDefault()
+        startSeeking(1)
         return
       }
 
@@ -646,6 +820,7 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
         e.key === 'k' || e.key === 'K'
       ) {
         e.preventDefault()
+        commitSeeking()
         togglePlayPause()
         return
       }
@@ -658,6 +833,7 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
       // Escape -> выйти из плеера
       if (e.key === 'Escape' || e.keyCode === 27) {
         e.preventDefault()
+        commitSeeking()
         const video = videoRef.current
         if (video) {
           video.pause()
@@ -669,9 +845,49 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
       }
     }
 
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (isRewindKey(e) && activeDirectionRef.current === -1) {
+        e.preventDefault()
+        commitSeeking()
+      } else if (isFastForwardKey(e) && activeDirectionRef.current === 1) {
+        e.preventDefault()
+        commitSeeking()
+      }
+    }
+
+    const handleWindowBlur = () => {
+      commitSeeking()
+    }
+
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [viewMode, handleSeek, togglePlayPause, resetWatchingHudTimer, persistProgress])
+    window.addEventListener('keyup', handleKeyUp)
+    window.addEventListener('blur', handleWindowBlur)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+      window.removeEventListener('blur', handleWindowBlur)
+    }
+  }, [
+    viewMode,
+    isAudioDrawerOpen,
+    isEpisodesDrawerOpen,
+    startSeeking,
+    commitSeeking,
+    togglePlayPause,
+    resetWatchingHudTimer,
+    persistProgress,
+  ])
+
+  // Очистка таймеров перемотки при выходе из режима просмотра
+  useEffect(() => {
+    if (viewMode !== 'watching') {
+      commitSeeking()
+    }
+    return () => {
+      commitSeeking()
+    }
+  }, [viewMode, commitSeeking])
 
   // Постер и фон: каскадный fallback при блокировке TMDB CDN
   const posterUrl = movie.poster && !posterError ? getPosterUrlWithFallback(movie.poster, posterStage) : ''
@@ -929,8 +1145,33 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
             </div>
           )}
 
+          {/* Быстрая перемотка при зажатии стрелок пульта */}
+          {fastSeekInfo && (
+            <div className="kp-fast-seek-overlay">
+              <div className="kp-fast-seek-card">
+                <div className="kp-fast-seek-top">
+                  <span className="kp-fast-seek-icon">
+                    {fastSeekInfo.direction < 0 ? '⏪' : '⏩'}
+                  </span>
+                  <span className="kp-fast-seek-time">
+                    {formatWatchTime(fastSeekInfo.targetTime)}
+                  </span>
+                </div>
+                <div className="kp-fast-seek-meta">
+                  <span className="kp-fast-seek-delta">
+                    {fastSeekInfo.totalDelta > 0 ? `+${fastSeekInfo.totalDelta}с` : `${fastSeekInfo.totalDelta}с`}
+                  </span>
+                  <span className="kp-fast-seek-speed">
+                    {fastSeekInfo.speedMultiplier}x
+                  </span>
+                </div>
+                <span className="kp-fast-seek-hint">Отпустите кнопку для воспроизведения</span>
+              </div>
+            </div>
+          )}
+
           {/* OSD Уведомление */}
-          {osdMessage && <div className="kp-osd-pill">{osdMessage}</div>}
+          {osdMessage && !fastSeekInfo && <div className="kp-osd-pill">{osdMessage}</div>}
 
           {/* ПЛАВАЮЩИЙ HUD УПРАВЛЕНИЯ */}
           <div
@@ -1108,7 +1349,7 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
                   {formatWatchTime(currentWatchTime)}
                 </span>
                 <div
-                  className="kp-seekbar-container"
+                  className={`kp-seekbar-container ${fastSeekInfo ? 'kp-seekbar-container--seeking' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation()
                     const rect = e.currentTarget.getBoundingClientRect()
@@ -1143,7 +1384,14 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
                     type="button"
                     className="kp-hud-btn kp-hud-seek-btn"
                     onClick={(e) => { e.stopPropagation(); handleSeek(-10) }}
-                    title="Перемотать назад на 10 секунд (◄)"
+                    onPointerDown={(e) => { e.stopPropagation(); startSeeking(-1) }}
+                    onPointerUp={(e) => { e.stopPropagation(); commitSeeking() }}
+                    onPointerLeave={() => commitSeeking()}
+                    onMouseDown={(e) => { e.stopPropagation(); startSeeking(-1) }}
+                    onMouseUp={(e) => { e.stopPropagation(); commitSeeking() }}
+                    onTouchStart={(e) => { e.stopPropagation(); startSeeking(-1) }}
+                    onTouchEnd={(e) => { e.stopPropagation(); commitSeeking() }}
+                    title="Перемотать назад на 10 секунд (◄) или зажмите для быстрой перемотки"
                   >
                     ⏪ -10с
                   </button>
@@ -1160,7 +1408,14 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
                     type="button"
                     className="kp-hud-btn kp-hud-seek-btn"
                     onClick={(e) => { e.stopPropagation(); handleSeek(10) }}
-                    title="Перемотать вперед на 10 секунд (►)"
+                    onPointerDown={(e) => { e.stopPropagation(); startSeeking(1) }}
+                    onPointerUp={(e) => { e.stopPropagation(); commitSeeking() }}
+                    onPointerLeave={() => commitSeeking()}
+                    onMouseDown={(e) => { e.stopPropagation(); startSeeking(1) }}
+                    onMouseUp={(e) => { e.stopPropagation(); commitSeeking() }}
+                    onTouchStart={(e) => { e.stopPropagation(); startSeeking(1) }}
+                    onTouchEnd={(e) => { e.stopPropagation(); commitSeeking() }}
+                    title="Перемотать вперед на 10 секунд (►) или зажмите для быстрой перемотки"
                   >
                     ⏩ +10с
                   </button>
@@ -1189,7 +1444,7 @@ export function RezkaPlayer({ movie, onBack }: MoviePlayerProps) {
 
                 <div className="kp-controls-right">
                   <span className="kp-remote-hint">
-                    Пульт: <strong>◄ / ►</strong> Перемотка 10с • <strong>OK</strong> Пауза • <strong>←</strong> Назад
+                    Пульт: <strong>◄ / ►</strong> 10с (удерживайте для ускоренной перемотки) • <strong>OK</strong> Пауза • <strong>←</strong> Назад
                   </span>
                 </div>
               </div>

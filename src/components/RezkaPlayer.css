@@ -1125,3 +1125,116 @@
   border-radius: 5px;
   font-weight: 800;
 }
+
+/* ====================================================
+   БЫСТРАЯ / УСКОРЕННАЯ ПЕРЕМОТКА ПРИ ЗАЖАТИИ СТРЕЛОК
+   ==================================================== */
+.kp-fast-seek-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 90;
+  pointer-events: none;
+  animation: kpFastSeekPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes kpFastSeekPop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.kp-fast-seek-card {
+  background: rgba(10, 15, 29, 0.94);
+  border: 2px solid rgba(56, 189, 248, 0.6);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), 0 0 35px rgba(56, 189, 248, 0.35);
+  border-radius: 24px;
+  padding: 1.5rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  backdrop-filter: blur(20px);
+  min-width: 340px;
+}
+
+.kp-fast-seek-top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.kp-fast-seek-icon {
+  font-size: 2.2rem;
+  animation: kpSeekPulse 0.7s infinite alternate ease-in-out;
+  line-height: 1;
+}
+
+@keyframes kpSeekPulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.18); }
+}
+
+.kp-fast-seek-time {
+  font-size: 2.8rem;
+  font-weight: 900;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 25px rgba(56, 189, 248, 0.7);
+  line-height: 1;
+}
+
+.kp-fast-seek-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.kp-fast-seek-delta {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.18);
+  padding: 0.3rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+.kp-fast-seek-speed {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.18);
+  padding: 0.3rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  letter-spacing: 0.05em;
+}
+
+.kp-fast-seek-hint {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
+}
+
+/* Активное состояние шкалы при быстрой перемотке */
+.kp-seekbar-container--seeking .kp-seekbar-rail {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.kp-seekbar-container--seeking .kp-seekbar-thumb {
+  transform: translate(-50%, -50%) scale(1.4);
+  box-shadow: 0 0 25px rgba(56, 189, 248, 1), 0 0 10px #ffffff;
+  background: #38bdf8;
+  border-color: #ffffff;
+}
+

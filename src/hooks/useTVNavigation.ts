@@ -69,6 +69,18 @@ export function useTVNavigation({
         return
       }
 
+      // Игнорируем навигацию сетки/категорий, если фокус находится в шапке (поиск, кнопка профиля "Основной", логотип)
+      // или в открытом модальном окне
+      const activeEl = document.activeElement
+      if (
+        activeEl?.closest('.app-header') ||
+        activeEl?.closest('.auth-modal-backdrop') ||
+        activeEl?.closest('.auth-modal') ||
+        activeEl?.closest('.rezka-settings-modal')
+      ) {
+        return
+      }
+
       // 1. Проверка кнопки возврата (Back) на Tizen, WebOS и ПК
       const isBackButton =
         e.key === 'Escape' ||

@@ -204,6 +204,9 @@ export function RezkaSection({ onOpenMovie, searchQuery = '', onFocusHeader }: M
   // Слушатель для перехода фокуса в категории сверху (например, от поиска)
   useEffect(() => {
     const handleFocusCategories = () => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur()
+      }
       setFocusArea('categories')
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
@@ -248,8 +251,6 @@ export function RezkaSection({ onOpenMovie, searchQuery = '', onFocusHeader }: M
     focusedIndex: focusedCategoryIdx,
     onFocusChange: (idx) => {
       setFocusedCategoryIdx(idx)
-      setCategory(MOVIE_CATEGORIES[idx].id)
-      setFocusedGridIdx(0)
     },
     onSelect: (idx) => {
       setCategory(MOVIE_CATEGORIES[idx].id)
@@ -257,9 +258,11 @@ export function RezkaSection({ onOpenMovie, searchQuery = '', onFocusHeader }: M
       setFocusedGridIdx(0)
     },
     onArrowDown: () => {
-      if (items.length > 0) {
-        setFocusArea('grid')
+      if (category !== MOVIE_CATEGORIES[focusedCategoryIdx].id) {
+        setCategory(MOVIE_CATEGORIES[focusedCategoryIdx].id)
       }
+      setFocusArea('grid')
+      setFocusedGridIdx(0)
     },
     onArrowUp: () => {
       onFocusHeader?.()

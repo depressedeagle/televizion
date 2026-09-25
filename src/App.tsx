@@ -231,10 +231,13 @@ function App() {
                       onKeyDown={(e) => {
                         if (e.key === 'ArrowDown') {
                           e.preventDefault()
+                          profileBtnRef.current?.blur()
                           window.dispatchEvent(new CustomEvent('tv_focus_categories'))
                         } else if (e.key === 'ArrowLeft') {
                           e.preventDefault()
                           searchBtnRef.current?.focus()
+                        } else if (e.key === 'ArrowRight') {
+                          e.preventDefault()
                         }
                       }}
                       title="Профиль и настройки"

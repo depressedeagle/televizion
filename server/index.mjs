@@ -23,6 +23,7 @@ const RUTUBE_API = 'https://rutube.ru/api'
 console.log('[Televizion] Movie & Balancer API server starting')
 
 const app = express()
+app.set('trust proxy', true)
 
 app.use(cors())
 app.use(express.json())
@@ -588,7 +589,12 @@ app.get('/api/hls-proxy', async (req, res) => {
 
       // Определяем базовый URL манифеста для разрешения относительных путей
       const baseUrl = targetUrl.substring(0, targetUrl.lastIndexOf('/') + 1)
-      const selfOrigin = `${req.protocol}://${req.get('host')}`
+      const host = req.get('host') || 'televizion.onrender.com'
+      const forwardedProto = req.headers['x-forwarded-proto']
+      const proto =
+        (forwardedProto ? forwardedProto.split(',')[0].trim() : '') ||
+        (host.includes('localhost') || host.includes('127.0.0.1') ? req.protocol : 'https')
+      const selfOrigin = `${proto}://${host}`
 
       // Переписываем абсолютные URL (https://...)
       text = text.replace(/(https?:\/\/[^\s"']+)/g, (match) => {
